@@ -1,0 +1,47 @@
+name: 'Krkn Doc Sync Bot'
+description: 'Detects documentation-impacting changes in upstream krkn-chaos repos and opens a draft PR on the website repo.'
+
+inputs:
+  github-token:
+    description: 'GitHub Personal Access Token with repo write access to the website repository.'
+    required: true
+  groq-api-key:
+    description: 'Groq API key for LLM-based documentation generation.'
+    required: true
+  website-repo:
+    description: 'The target website repository (owner/repo) where documentation PRs will be created. e.g. krkn-chaos/website'
+    required: true
+  website-docs-base-path:
+    description: 'Base path inside the website repo where docs content lives. e.g. content/en/docs/scenarios'
+    required: false
+    default: 'content/en/docs'
+  groq-model:
+    description: 'The Groq model to use for generation.'
+    required: false
+    default: 'llama3-70b-8192'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      shell: bash
+      run: pip install -r ${{ github.action_path }}/requirements.txt
+
+    - name: Run Krkn Doc Sync Bot
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        GROQ_API_KEY: ${{ inputs.groq-api-key }}
+        WEBSITE_REPO: ${{ inputs.website-repo }}
+        WEBSITE_DOCS_BASE_PATH: ${{ inputs.website-docs-base-path }}
+        GROQ_MODEL: ${{ inputs.groq-model }}
+        # These are set automatically by GitHub Actions runner
+        GITHUB_EVENT_NAME: ${{ github.event_name }}
+        GITHUB_EVENT_PATH: ${{ github.event_path }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+      run: python ${{ github.action_path }}/main.py
