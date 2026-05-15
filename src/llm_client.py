@@ -1,7 +1,11 @@
 """
-llm_client.py — Interfaces with Groq to analyze diffs and generate Hugo/Docsy markdown.
+llm_client.py — Interfaces with Groq via LangChain's ChatGroq integration to analyze
+diffs and generate Hugo/Docsy markdown.
 """
-from groq import Groq
+import json
+
+from langchain_groq import ChatGroq
+from langchain_core.messages import HumanMessage, SystemMessage
 
 ANALYZE_DIFF_SYSTEM_PROMPT = """You are an expert technical writer for the krkn-chaos open source project.
 Your job is to analyze a git diff from an upstream repository and determine whether
@@ -40,28 +44,27 @@ Follow these rules:
 
 class LLMClient:
     def __init__(self, api_key: str, model: str):
-        self.client = Groq(api_key=api_key)
-        self.model = model
+        self.llm = ChatGroq(
+            api_key=api_key,
+            model=model,
+            temperature=0.2,
+            max_retries=2,
+        )
 
     def _chat(self, system: str, user: str) -> str:
-        """Send a message to Groq and return the text response."""
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=[
-                {"role": "system", "content": system},
-                {"role": "user", "content": user},
-            ],
-            temperature=0.2,
-        )
-        return response.choices[0].message.content.strip()
+        """Invoke ChatGroq with a system + human message pair and return the text response."""
+        messages = [
+            SystemMessage(content=system),
+            HumanMessage(content=user),
+        ]
+        response = self.llm.invoke(messages)
+        return response.content.strip()
 
     def analyze_diff(self, diff: str, pr_title: str, pr_body: str) -> dict:
         """
         Analyze a PR diff to determine if documentation updates are needed.
         Returns a dict with: needs_update, reason, change_summary, affected_doc_hint
         """
-        import json
-
         user_message = f"""PR Title: {pr_title}
 
 PR Description:
@@ -120,3 +123,4 @@ Current Documentation Content:
 Please return the full updated documentation file content incorporating the instruction.
 """
         return self._chat(GENERATE_DOC_SYSTEM_PROMPT, user_message)
+
