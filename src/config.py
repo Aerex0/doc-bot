@@ -12,7 +12,7 @@ class Config:
         self.website_docs_base_path: str = os.environ.get(
             "WEBSITE_DOCS_BASE_PATH", "content/en/docs"
         )
-        self.groq_model: str = os.environ.get("GROQ_MODEL", "llama3-70b-8192")
+        self.groq_model: str = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
         self.github_event_name: str = os.environ.get("GITHUB_EVENT_NAME", "")
         self.github_event_path: str = os.environ.get("GITHUB_EVENT_PATH", "")
         self.github_repository: str = os.environ.get("GITHUB_REPOSITORY", "")

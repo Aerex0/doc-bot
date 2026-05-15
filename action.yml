@@ -18,7 +18,7 @@ inputs:
   groq-model:
     description: 'The Groq model to use for generation.'
     required: false
-    default: 'llama3-70b-8192'
+    default: 'openai/gpt-oss-120b'
 
 runs:
   using: 'composite'
